@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>Smile新聞/Smile放送局</title>
 
 <!-- Google Fonts: IBM Plex Sans JP -->
@@ -33,6 +34,7 @@
 
     p {
         font-size: 16px;
+        font-weight: 400;
     }
 
     a {
@@ -45,8 +47,9 @@
 
 <body>
 
-<marquee id="connectionStatus">
-接続状態を確認しています...
+<!-- 接続できないときだけ表示 -->
+<marquee id="connectionStatus" style="display: none;">
+現在接続できません。
 </marquee>
 
 <h1>Smile新聞/Smile放送局</h1>
@@ -65,38 +68,36 @@ async function checkConnection() {
     const status = document.getElementById("connectionStatus");
 
     if (!navigator.onLine) {
-        status.textContent = "現在インターネットに接続されていません。";
-        status.style.backgroundColor = "#ff3333";
+        status.style.display = "block";
         return;
     }
 
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 4000);
+
     try {
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 4000);
+        await fetch("https://www.gstatic.com/generate_204", {
+            method: "HEAD",
+            mode: "no-cors",
+            cache: "no-store",
+            signal: controller.signal
+        });
 
-        await fetch(
-            "https://www.gstatic.com/generate_204",
-            {
-                method: "HEAD",
-                mode: "no-cors",
-                cache: "no-store",
-                signal: controller.signal
-            }
-        );
-
-        clearTimeout(timeout);
-
-        status.textContent = "インターネットに接続されています。";
-        status.style.backgroundColor = "#00a2ff";
+        status.style.display = "none";
     } catch (error) {
-        status.textContent = "現在インターネットに接続できません。";
-        status.style.backgroundColor = "#ff3333";
+        status.style.display = "block";
+    } finally {
+        clearTimeout(timeout);
     }
 }
 
+// ページを開いたときに確認
 checkConnection();
+
+// 5秒ごとに再確認
 setInterval(checkConnection, 5000);
 
+// 接続状態が変化したら確認
 window.addEventListener("online", checkConnection);
 window.addEventListener("offline", checkConnection);
 </script>
