@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -33,7 +34,6 @@
 
     p {
         font-size: 16px;
-        font-weight: 400;
     }
 
     a {
@@ -46,8 +46,8 @@
 
 <body>
 
-<marquee>
-現在接続できません。
+<marquee id="connectionStatus">
+接続状態を確認しています...
 </marquee>
 
 <h1>Smile新聞/Smile放送局</h1>
@@ -61,5 +61,47 @@
 こちら
 </a>
 
+<script>
+async function checkConnection() {
+    const status = document.getElementById("connectionStatus");
+
+    if (!navigator.onLine) {
+        status.textContent = "現在インターネットに接続されていません。";
+        status.style.backgroundColor = "#ff3333";
+        return;
+    }
+
+    try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 4000);
+
+        await fetch(
+            "https://www.gstatic.com/generate_204",
+            {
+                method: "HEAD",
+                mode: "no-cors",
+                cache: "no-store",
+                signal: controller.signal
+            }
+        );
+
+        clearTimeout(timeout);
+
+        status.textContent = "インターネットに接続されています。";
+        status.style.backgroundColor = "#00a2ff";
+    } catch (error) {
+        status.textContent = "現在インターネットに接続できません。";
+        status.style.backgroundColor = "#ff3333";
+    }
+}
+
+checkConnection();
+setInterval(checkConnection, 5000);
+
+window.addEventListener("online", checkConnection);
+window.addEventListener("offline", checkConnection);
+</script>
+
 </body>
 </html>
+```
